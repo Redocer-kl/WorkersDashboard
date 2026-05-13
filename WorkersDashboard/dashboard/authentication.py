@@ -15,7 +15,6 @@ class CustomJWTAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('Invalid or expired token')
 
         try:
-            # Ищем только активных пользователей [cite: 10]
             user = User.objects.get(id=user_id, is_active=True)
         except User.DoesNotExist:
             raise exceptions.AuthenticationFailed('User not found or inactive')

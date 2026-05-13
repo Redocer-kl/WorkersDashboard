@@ -1,0 +1,3 @@
+INFO | 2026-05-13 17:43:24,850 | views | Successful login: test@test.com
+INFO | 2026-05-13 17:43:24,984 | views | User profile deleted by owner: test@test.com
+WARNING | 2026-05-13 17:43:25,052 | views | Failed login attempt for email: test@test.com

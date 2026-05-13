@@ -89,11 +89,14 @@ WSGI_APPLICATION = 'WorkersDashboard.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST', 'db'),  
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -162,11 +165,27 @@ AXES_LOCKOUT_TEMPLATE = 'lockout.html'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} | {asctime} | {module} | {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
         'file': {
-            'level': 'INFO',
+            'level': 'INFO', 
             'class': 'logging.FileHandler',
-            'filename': 'security_audit.log',
+            'filename': os.path.join(BASE_DIR, 'dashboard_audit.log'),
+            'formatter': 'verbose',
         },
     },
     'loggers': {
@@ -174,6 +193,16 @@ LOGGING = {
             'handlers': ['file'],
             'level': 'INFO',
             'propagate': True,
+        },
+        'dashboard': { 
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG', 
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['file'],
+            'level': 'ERROR',
+            'propagate': False,
         },
     },
 }
