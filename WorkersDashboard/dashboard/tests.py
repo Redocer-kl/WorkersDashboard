@@ -196,3 +196,36 @@ class RbacTrafficTests(APITestCase):
     }
         response = self.client.post(url, data, format='json')
         self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_201_CREATED])
+
+    def test_logout_blacklists_token(self):
+        """
+        Проверка: после логаута токен добавляется в blacklist, 
+        и по нему больше нельзя получить доступ к ресурсам.
+        """
+
+        login_url = reverse('login')
+        login_response = self.client.post(
+            login_url,
+            {'email': 'manager@test.com', 'password': 'password123'},
+            format='json'
+        )
+        self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+        
+        token = login_response.data['token']
+        
+        self.client.credentials(HTTP_AUTHORIZATION='Bearer ' + token)
+        employees_url = reverse('employee-list')
+        response_before_logout = self.client.get(employees_url)
+        self.assertEqual(response_before_logout.status_code, status.HTTP_200_OK)
+
+        logout_url = reverse('logout')  # Убедись, что имя url 'logout' совпадает с твоим urls.py
+        logout_response = self.client.post(logout_url)
+        self.assertEqual(logout_response.status_code, status.HTTP_200_OK)
+
+        response_after_logout = self.client.get(employees_url)
+
+        self.assertEqual(response_after_logout.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(
+            response_after_logout.data['detail'], 
+            'Token has been blacklisted (Logged out)'
+        )

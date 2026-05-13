@@ -1,3 +1,12 @@
 INFO | 2026-05-13 17:43:24,850 | views | Successful login: test@test.com
 INFO | 2026-05-13 17:43:24,984 | views | User profile deleted by owner: test@test.com
 WARNING | 2026-05-13 17:43:25,052 | views | Failed login attempt for email: test@test.com
+INFO | 2026-05-13 19:38:54,761 | views | Admin admin@test.com created permission: admin -> create -> employees
+INFO | 2026-05-13 19:38:55,276 | views | Successful login: manager@test.com
+INFO | 2026-05-13 19:38:55,554 | views | Successful login: manager@test.com
+WARNING | 2026-05-13 19:38:55,813 | views | Failed login attempt for email: manager@test.com
+INFO | 2026-05-13 19:38:56,053 | views | Successful login: manager@test.com
+INFO | 2026-05-13 19:38:56,065 | views | User logged out: manager@test.com
+INFO | 2026-05-13 19:38:56,420 | views | User profile updated: manager@test.com
+INFO | 2026-05-13 19:38:56,821 | views | New user registered: new@test.com (ID: 37)
+INFO | 2026-05-13 19:38:56,994 | views | User profile deleted by owner: manager@test.com

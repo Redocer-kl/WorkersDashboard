@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth.hashers import check_password
 
-from .models import User, Permission, Employee
+from .models import User, Permission, Employee, BlacklistedToken
 from .serializers import (
     RegisterSerializer,
     LoginSerializer,
@@ -78,6 +78,14 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        # Достаем токен из заголовка
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            parts = auth_header.split(' ')
+            if len(parts) == 2 and parts[0].lower() == 'bearer':
+                token = parts[1]
+                BlacklistedToken.objects.get_or_create(token=token)
+
         logger.info(f"User logged out: {request.user.email}")
 
         return Response(

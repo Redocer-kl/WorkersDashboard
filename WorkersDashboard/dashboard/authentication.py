@@ -1,6 +1,5 @@
-# authentication.py
 from rest_framework import authentication, exceptions
-from dashboard.models import User
+from dashboard.models import User, BlacklistedToken 
 from .security import decode_access_token
 
 class CustomJWTAuthentication(authentication.BaseAuthentication):
@@ -14,6 +13,10 @@ class CustomJWTAuthentication(authentication.BaseAuthentication):
             return None 
 
         token = parts[1]
+
+        if BlacklistedToken.objects.filter(token=token).exists():
+            raise exceptions.AuthenticationFailed('Token has been blacklisted (Logged out)')
+            
         user_id = decode_access_token(token)
 
         if user_id is None:

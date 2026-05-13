@@ -172,3 +172,10 @@ class Employee(models.Model):
 
     def __str__(self):
         return f'{self.user.full_name} - {self.position}'
+
+class BlacklistedToken(models.Model):
+    token = models.CharField(max_length=500, unique=True)
+    blacklisted_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Blacklisted at {self.blacklisted_at}"
