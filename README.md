@@ -85,3 +85,31 @@ PASSWORD_HASHERS_SALT=generate-a-random-string-for-salt
 JWT_SECRET_KEY=another-very-secret-key-specifically-for-jwt
 ```
 
+# Тестирование
+
+Проект покрыт интеграционными тестами (`APITestCase`), которые проверяют корректность работы JWT-аутентификации, логику RBAC и строгое соответствие ТЗ по статус-кодам.
+
+## Запуск тестов
+
+Для запуска тестов внутри Docker-контейнера используйте команду:
+
+```bash
+docker compose exec web python manage.py test
+```
+
+## Описание тест-кейсов
+
+| Категория | Тест-кейс | Описание проверки | Ожидаемый статус |
+|---|---|---|---|
+| Auth | `test_registration_success` | Регистрация с валидными данными и сложным паролем. | 201 Created |
+| Auth | `test_registration_passwords_dont_match` | Попытка регистрации с несовпадающими паролями. | 400 Bad Request |
+| Auth | `test_login_success` | Вход по верным учетным данным и получение JWT-токена. | 200 OK |
+| Auth | `test_login_wrong_password` | Попытка входа с неверным паролем. | 401 Unauthorized |
+| Auth | `test_invalid_token_is_unauthorized` | Запрос к защищенному API с поддельным/битым токеном. | 401 Unauthorized |
+| Auth | `test_access_resource_without_token` | Запрос к API без заголовка `Authorization`. | 401 Unauthorized |
+| Profile | `test_profile_update` | Обновление данных (имя) текущего залогиненного пользователя. | 200 OK |
+| Profile | `test_soft_delete` | Мягкое удаление профиля (`is_active=False`) и проверка запрета входа. | 204 No Content |
+| RBAC | `test_login_and_access_resource` | Успешный доступ к ресурсу при наличии прав в таблице `Permission`. | 200 OK |
+| RBAC | `test_access_forbidden_no_permission` | Отказ в доступе пользователю, роль которого не имеет прав на ресурс. | 403 Forbidden |
+| Admin | `test_admin_can_manage_permissions` | Возможность администратора создавать новые правила доступа. | 201 Created |
+| Admin | `test_non_admin_cannot_manage_permissions` | Запрет обычным пользователям (менеджерам) управлять правами. | 403 Forbidden |
