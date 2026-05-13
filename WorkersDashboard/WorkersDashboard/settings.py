@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # Библиотеки
     'rest_framework',
-    'rest_framework_simplejwt',
     'drf_spectacular',
     'axes',
     
@@ -162,50 +161,50 @@ AXES_FAILURE_LIMIT = 5
 AXES_COOLOFF_TIME = 1   
 AXES_LOCKOUT_TEMPLATE = 'lockout.html' 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} | {asctime} | {module} | {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file': {
-            'level': 'INFO', 
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'dashboard_audit.log'),
-            'formatter': 'verbose',
-        },
-    },
-    'loggers': {
-        'django.security': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-        'dashboard': { 
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG', 
-            'propagate': False,
-        },
-        'django.request': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': False,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} | {asctime} | {module} | {message}',
+#             'style': '{',
+#         },
+#         'simple': {
+#             'format': '{levelname} {message}',
+#             'style': '{',
+#         },
+#     },
+#     'handlers': {
+#         'console': {
+#             'level': 'DEBUG',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'verbose',
+#         },
+#         # 'file': {
+#         #     'level': 'INFO', 
+#         #     'class': 'logging.FileHandler',
+#         #     'filename': os.path.join(BASE_DIR, 'dashboard_audit.log'),
+#         #     'formatter': 'verbose',
+#         # },
+#     },
+#     'loggers': {
+#         'django.security': {
+#             'handlers': ['file'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
+#         'dashboard': { 
+#             'handlers': ['console', 'file'],
+#             'level': 'DEBUG', 
+#             'propagate': False,
+#         },
+#         'django.request': {
+#             'handlers': ['file'],
+#             'level': 'ERROR',
+#             'propagate': False,
+#         },
+#     },
+# }
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',

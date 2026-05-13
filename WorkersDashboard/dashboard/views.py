@@ -2,22 +2,26 @@ from rest_framework import status, generics, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from django.contrib.auth import authenticate
+from django.contrib.auth.hashers import check_password
 
 from .models import User, Permission, Employee
 from .serializers import (
-    RegisterSerializer, LoginSerializer, UserSerializer, 
-    PermissionSerializer, EmployeeSerializer
+    RegisterSerializer,
+    LoginSerializer,
+    UserSerializer,
+    PermissionSerializer,
+    EmployeeSerializer
 )
 from .security import generate_access_token
-from .permissions import HasResourcePermission
+from .permissions import HasResourcePermission, IsAdminUserRole
 
 import logging
-logger = logging.getLogger('dashboard') 
+
+logger = logging.getLogger('dashboard')
 
 
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+    queryset = User.all_objects.all()
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
@@ -32,22 +36,42 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         email = serializer.validated_data['email']
         password = serializer.validated_data['password']
-        
-        user = authenticate(request=request, email=email, password=password)
-        
-        if user and user.is_active:
-            token = generate_access_token(user)
-            logger.info(f"Successful login: {email}")
-            return Response({'token': token, 'user': UserSerializer(user).data})
-        
-        logger.warning(f"Failed login attempt for email: {email}")
-        return Response(
-            {'error': 'Invalid credentials or account deleted'}, 
-            status=status.HTTP_401_UNAUTHORIZED
-        )
+
+        try:
+            user = User.all_objects.get(email=email)
+        except User.DoesNotExist:
+            logger.warning(f"Failed login attempt for email: {email}")
+
+            return Response(
+                {'error': 'Invalid credentials'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if not user.is_active:
+            return Response(
+                {'error': 'Account is deactivated'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        if not check_password(password, user.password):
+            logger.warning(f"Failed login attempt for email: {email}")
+
+            return Response(
+                {'error': 'Invalid credentials'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        token = generate_access_token(user)
+
+        logger.info(f"Successful login: {email}")
+
+        return Response({
+            'token': token,
+            'user': UserSerializer(user).data
+        })
 
 
 class LogoutView(APIView):
@@ -55,7 +79,11 @@ class LogoutView(APIView):
 
     def post(self, request):
         logger.info(f"User logged out: {request.user.email}")
-        return Response({"message": "Successfully logged out"}, status=status.HTTP_200_OK)
+
+        return Response(
+            {"message": "Successfully logged out"},
+            status=status.HTTP_200_OK
+        )
 
 
 class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
@@ -67,31 +95,42 @@ class UserProfileView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         user = serializer.save()
+
         logger.info(f"User profile updated: {user.email}")
 
     def perform_destroy(self, instance):
         logger.info(f"User profile deleted by owner: {instance.email}")
-        instance.delete() 
+
+        instance.delete()
 
 
 class AdminPermissionViewSet(viewsets.ModelViewSet):
-    """
-    Эндпоинт для админа. Здесь аудит особенно важен.
-    """
     queryset = Permission.objects.all()
     serializer_class = PermissionSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsAdminUserRole]
 
     def perform_create(self, serializer):
         perm = serializer.save()
-        logger.info(f"Admin {self.request.user.email} created permission: {perm.name}")
+
+        logger.info(
+            f"Admin {self.request.user.email} created permission: "
+            f"{perm.role.slug} -> {perm.action.slug} -> {perm.resource.slug}"
+        )
 
     def perform_update(self, serializer):
         perm = serializer.save()
-        logger.info(f"Admin {self.request.user.email} updated permission: {perm.name}")
+
+        logger.info(
+            f"Admin {self.request.user.email} updated permission: "
+            f"{perm.role.slug} -> {perm.action.slug} -> {perm.resource.slug}"
+        )
 
     def perform_destroy(self, instance):
-        logger.warning(f"Admin {self.request.user.email} DELETED permission: {instance.name}")
+        logger.warning(
+            f"Admin {self.request.user.email} deleted permission: "
+            f"{instance.role.slug} -> {instance.action.slug} -> {instance.resource.slug}"
+        )
+
         instance.delete()
 
 
@@ -100,7 +139,8 @@ class EmployeeListView(generics.ListAPIView):
     serializer_class = EmployeeSerializer
     permission_classes = [HasResourcePermission]
     resource_slug = 'employees'
-    
+
     def list(self, request, *args, **kwargs):
         logger.debug(f"Employee list accessed by: {request.user.email}")
+
         return super().list(request, *args, **kwargs)

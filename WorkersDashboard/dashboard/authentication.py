@@ -1,3 +1,4 @@
+# authentication.py
 from rest_framework import authentication, exceptions
 from dashboard.models import User
 from .security import decode_access_token
@@ -5,10 +6,14 @@ from .security import decode_access_token
 class CustomJWTAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):
         auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
+        if not auth_header:
             return None
 
-        token = auth_header.split(' ')[1]
+        parts = auth_header.split(' ')
+        if len(parts) != 2 or parts[0].lower() != 'bearer':
+            return None 
+
+        token = parts[1]
         user_id = decode_access_token(token)
 
         if user_id is None:
@@ -20,3 +25,6 @@ class CustomJWTAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed('User not found or inactive')
 
         return (user, None)
+
+    def authenticate_header(self, request):
+        return 'Bearer'
